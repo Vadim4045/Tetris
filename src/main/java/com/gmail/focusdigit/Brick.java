@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class Brick {
     private Point point;
-    private int width;
+    final private int width;
 
     public Brick(Point point, int width){
         this.point=new Point(point);
@@ -21,14 +21,18 @@ public class Brick {
     }
 
     public void mooveRelative(int x,int y){
-        this.point.mooveRelative(x, y);
+        this.point.mooveRelative(x*width, y*width);
     }
 
     public Point getPoint() {
         return point;
     }
 
-    public void draw(Graphics2D g2d){
-        g2d.drawRect(point.getX(), point.getY(), width, width);
+    public int getWidth() {
+        return width;
+    }
+
+    public void draw(Graphics g){
+        g.drawRect(point.getX(), point.getY(), width, width);
     }
 }

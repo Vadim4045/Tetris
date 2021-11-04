@@ -7,7 +7,6 @@ public class Figure {
 
     private Brick[] bricks;
 
-
     public Figure(Point place, int width, int angle, int... param) throws InvalidPropertiesFormatException {
         if(param.length < 2 || param.length%2 != 0 || angle%90 != 0 || width < 0)
             throw new InvalidPropertiesFormatException("Bad coordinates");
@@ -21,7 +20,7 @@ public class Figure {
                     bricks[0].getPoint().getY()+param[2*i+1]*width,
                                          width);
 
-        //turnRelative(angle);
+        turnRelative(angle);
     }
 
     public void mooveRelative(int x, int y){
@@ -34,16 +33,19 @@ public class Figure {
         if(angle%90!=0) throw new InvalidPropertiesFormatException("Angle is not correct");
 
         for(Brick b:bricks){
-            Point vector = bricks[0].getPoint().getRelativeVector(b.getPoint());
+            Point vector = getPoint().getRelativeVector(b.getPoint());
             switch (angle%360){
                 case 270:
-                    b.mooveRelative(vector.getY(),-vector.getX());
+                    b.mooveAbsolute(getPoint().getX() + vector.getY(),
+                            getPoint().getY() - vector.getX());
                     break;
                 case 180:
-                    b.mooveRelative(-vector.getX(),-vector.getY());
+                    b.mooveAbsolute(getPoint().getX() - vector.getX(),
+                            getPoint().getY() - vector.getY());
                     break;
                 case 90:
-                    b.mooveRelative(-vector.getY(),vector.getX());
+                    b.mooveAbsolute(getPoint().getX() - vector.getY(),
+                            getPoint().getY() + vector.getX());
                     break;
                 case 0:
                 default:
@@ -61,8 +63,8 @@ public class Figure {
         return bricks;
     }
 
-    public void draw(Graphics2D g2d){
+    public void draw(Graphics g){
         for(Brick b:bricks)
-            if(b!=null) b.draw(g2d);
+            if(b!=null) b.draw(g);
     }
 }

@@ -2,6 +2,9 @@ package com.gmail.focusdigit;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Random;
 
@@ -11,6 +14,8 @@ public class GamePanel extends JPanel {
     private final int brickWidth;
     private boolean gameFlag,mooveFlag;
     private Figure currentFigure;
+    private Brick[][] list;
+    private int timeOut;
 
     public GamePanel(int width, int height, int brickWidth) {
         this.width = width-20;
@@ -18,6 +23,8 @@ public class GamePanel extends JPanel {
         this.brickWidth=brickWidth;
         gameFlag=true;
         mooveFlag=true;
+        timeOut=500;
+        list = new Brick[this.height/brickWidth][this.width/brickWidth];
         start();
     }
 
@@ -27,13 +34,10 @@ public class GamePanel extends JPanel {
             public void run() {
                 try {
                     while (gameFlag) {
-                        if(currentFigure==null || currentFigure.getPoint().getY()>=height)
                             currentFigure = getRandomFigure(20);
                         if(currentFigure==null)continue;
 
-                        System.out.println(currentFigure.getPoint().getY()<height);
-
-                        while (currentFigure.getPoint().getY()<height){
+                        while (mooveCheck(currentFigure)){
                             while (!mooveFlag) Thread.sleep(1);
 
                             synchronized (currentFigure){
@@ -41,8 +45,10 @@ public class GamePanel extends JPanel {
                                 GamePanel.this.repaint();
                             }
 
-                            Thread.sleep(500);
+                            Thread.sleep(timeOut);
                         }
+
+                        figureStop(currentFigure);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -52,19 +58,61 @@ public class GamePanel extends JPanel {
         thread.start();
     }
 
+    private boolean mooveCheck(Figure figure){
+        for(Brick brick:figure.getBricks()){
+            for(Brick[] row:list)
+                for(Brick b:row) {
+                    if (brick.getPoint().getY() + brickWidth>=height ||
+                            (b!=null &&
+                                brick.getPoint().getX()==b.getPoint().getX() &&
+                                brick.getPoint().getY() + brickWidth == b.getPoint().getY()))
+                                     return false;
+                }
+            }
+        return true;
+    }
+
+    private void figureStop(Figure figure){
+        for(Brick b:figure.getBricks()){
+            list[b.getPoint().getY()/brickWidth][b.getPoint().getX()/brickWidth] = b;
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g){
         super.paintComponent(g);
-/*        Graphics2D g2d = (Graphics2D) g;
-        Stroke stroke1 = new BasicStroke(1f);
-        g2d.setColor(Color.BLACK);
-        g2d.setStroke(stroke1);*/
         currentFigure.draw(g);
+        for(Brick[] row:list) {
+            for(Brick b:row)
+                if(b!=null)b.draw(g);
+        }
     }
 
-    private void refresh(Graphics2D g2d) {
-        GamePanel.this.repaint();
-        currentFigure.draw(g2d);
+    public void turnRight(int code){
+        System.out.println(code);
+        switch (code){
+            case 39:
+                mooveFlag=false;
+                    currentFigure.mooveRelative(1,0);
+                mooveFlag=true;
+                break;
+            case 37:
+                mooveFlag=false;
+                currentFigure.mooveRelative(-1,0);
+                mooveFlag=true;
+                break;
+            case 38:
+                mooveFlag=false;
+                try {
+                    currentFigure.turnRelative(90);
+                } catch (InvalidPropertiesFormatException invalidPropertiesFormatException) {
+                    invalidPropertiesFormatException.printStackTrace();
+                }
+                mooveFlag=true;
+                break;
+            default:
+                break;
+        }
     }
 
     private Figure getRandomFigure(int brickWidth) {
@@ -77,7 +125,7 @@ public class GamePanel extends JPanel {
             int num = ran.nextInt(sets.length);
             int angle = ran.nextInt(4);
             int placeX = ran.nextInt(width/brickWidth-6)+3;
-            System.out.println("Created new figure");
+
             return  new Figure(new Point(placeX * brickWidth, -2 * brickWidth),
                     brickWidth, angle * 90, sets[num]);
         }catch (InvalidPropertiesFormatException e){
@@ -86,19 +134,19 @@ public class GamePanel extends JPanel {
         return null;
     }
 
-    public boolean isGameFlag() {
-        return gameFlag;
+    public int getTimeOut() {
+        return timeOut;
     }
 
-    public void setGameFlag(boolean gameFlag) {
-        this.gameFlag = gameFlag;
+    public void setTimeOut(int timeOut) {
+        this.timeOut = timeOut;
     }
 
-    public boolean isMooveFlag() {
-        return mooveFlag;
+    public void fastMotion() {
+        setTimeOut(20);
     }
 
-    public void setMooveFlag(boolean mooveFlag) {
-        this.mooveFlag = mooveFlag;
+    public void slowMoition(){
+        setTimeOut(500);
     }
 }

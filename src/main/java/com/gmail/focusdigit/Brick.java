@@ -33,6 +33,9 @@ public class Brick {
     }
 
     public void draw(Graphics g){
+        g.setColor(Color.GRAY);
+        g.fillRect(point.getX(), point.getY(), width, width);
+        g.setColor(Color.white);
         g.drawRect(point.getX(), point.getY(), width, width);
     }
 }

@@ -16,7 +16,7 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
     private static int level = 0;
     private static final int cellsWidth = 16;
     private static final int cellsHeight = 25;
-    int brickWidth;
+    private int brickWidth;
     private GamePanel panel=null;
     private JPanel nextPanel;
     private JLabel[] infoLabels;

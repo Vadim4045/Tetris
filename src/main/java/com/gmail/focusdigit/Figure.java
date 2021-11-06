@@ -1,11 +1,19 @@
 package com.gmail.focusdigit;
 
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.InvalidPropertiesFormatException;
 
 public class Figure {
 
-    private Brick[] bricks;
+    private volatile Brick[] bricks;
+
+    public Figure(Figure toClone){
+        this.bricks = new Brick[toClone.getBricks().length];
+        for(int i=0;i<bricks.length;i++)
+            bricks[i]=new Brick(toClone.getBricks()[i]);
+    }
 
     public Figure(Point place, int width, int angle, int... param) throws InvalidPropertiesFormatException {
         if(param.length < 2 || param.length%2 != 0 || angle%90 != 0 || width < 0)
@@ -20,6 +28,8 @@ public class Figure {
                     bricks[0].getPoint().getY()+param[2*i+1]*width,
                                          width);
 
+
+
         turnRelative(angle);
     }
 
@@ -29,9 +39,7 @@ public class Figure {
         }
     }
 
-    public void turnRelative(int angle) throws InvalidPropertiesFormatException {
-        if(angle%90!=0) throw new InvalidPropertiesFormatException("Angle is not correct");
-
+    public void turnRelative(int angle){
         for(Brick b:bricks){
             Point vector = getPoint().getRelativeVector(b.getPoint());
             switch (angle%360){

@@ -1,3 +1,7 @@
-com\gmail\focusdigit\Brick.class
+com\gmail\focusdigit\App.class
 com\gmail\focusdigit\Point.class
 com\gmail\focusdigit\Figure.class
+com\gmail\focusdigit\GamePanel$1.class
+com\gmail\focusdigit\GamePanel.class
+com\gmail\focusdigit\Brick.class
+com\gmail\focusdigit\App$1.class

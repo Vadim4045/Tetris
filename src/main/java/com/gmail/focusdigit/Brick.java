@@ -3,8 +3,13 @@ package com.gmail.focusdigit;
 import java.awt.*;
 
 public class Brick {
-    private Point point;
+    private volatile Point point;
     final private int width;
+
+    public Brick(Brick toClone){
+        setPoint(new Point(toClone.getPoint()));
+        this.width = toClone.getWidth();
+    }
 
     public Brick(Point point, int width){
         this.point=new Point(point);
@@ -30,6 +35,10 @@ public class Brick {
 
     public int getWidth() {
         return width;
+    }
+
+    public void setPoint(Point point) {
+        this.point = point;
     }
 
     public void draw(Graphics g){

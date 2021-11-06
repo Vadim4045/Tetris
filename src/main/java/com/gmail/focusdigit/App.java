@@ -48,13 +48,12 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
             width = brickWidth*cellsWidth+brickWidth;
         }
 
-        setSize(width, height+90);
-
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        add(makeTopPanel(),BorderLayout.NORTH);
+        JPanel topPanel = makeTopPanel();
+        add(topPanel,BorderLayout.NORTH);
 
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
@@ -86,11 +85,15 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
         tmpPanel.add(buttons[3]);
         controlPanel.add(tmpPanel);
 
+
         add(controlPanel, BorderLayout.SOUTH);
 
         panel = new GamePanel(this, cellsWidth, cellsHeight, brickWidth);
         panel.setBorder(new LineBorder(Color.GRAY,1,false));
         getContentPane().add(panel, BorderLayout.CENTER);
+
+        setSize(width, height + 106);
+
         GlobalScreen.addNativeKeyListener(this);
     }
 

@@ -33,6 +33,14 @@ public class Brick {
         return point;
     }
 
+    public int getX(){return getPoint().getX();}
+
+    public void setX(int x){getPoint().setX(x);}
+
+    public int getY(){return getPoint().getY();}
+
+    public void setY(int y){getPoint().setY(y);}
+
     public int getWidth() {
         return width;
     }

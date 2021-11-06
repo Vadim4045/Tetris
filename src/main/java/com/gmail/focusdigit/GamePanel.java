@@ -1,13 +1,20 @@
 package com.gmail.focusdigit;
 
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
+
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicTreeUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Random;
 
-public class GamePanel extends JPanel {
+public class GamePanel extends JPanel
+{
     App parent;
     private final int width;
     private final int height;
@@ -31,10 +38,12 @@ public class GamePanel extends JPanel {
         pause=timeOut;
         list = new Brick[height][width];
 
-        start();
+        GlobalScreen.addNativeKeyListener(new simpleKeyListener());
+
+        startGame();
     }
 
-    private void start(){
+    private void startGame(){
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -77,13 +86,13 @@ public class GamePanel extends JPanel {
 
     private boolean mooveCheck(Figure figure){
         for(Brick brick:figure.getBricks()){
-            if(brick.getPoint().getY()/brickWidth+1 >= list.length) return false;
+            if(brick.getY()/brickWidth+1 >= list.length) return false;
 
             for(Brick[] row:list)
                 for(Brick b:row) {
                     if (b!=null
-                            && brick.getPoint().getX()==b.getPoint().getX()
-                                && brick.getPoint().getY() + brickWidth == b.getPoint().getY())
+                            && brick.getX()==b.getX()
+                                && brick.getY() + brickWidth == b.getY())
                                      return false;
                 }
             }
@@ -92,8 +101,8 @@ public class GamePanel extends JPanel {
 
     private void figureStop(Figure figure){
         for(Brick b:figure.getBricks()) {
-            if (b.getPoint().getY()<=0) endOfGame();
-            list[b.getPoint().getY() / brickWidth][b.getPoint().getX() / brickWidth] = b;
+            if (b.getY()<=0) endOfGame();
+            list[b.getY() / brickWidth][b.getX() / brickWidth] = b;
         }
         checkMap();
     }
@@ -120,7 +129,7 @@ public class GamePanel extends JPanel {
                 if(list[i][j]!=null){
                     list[i+1][j]=list[i][j];
                     list[i][j]=null;
-                    list[i+1][j].getPoint().setY(list[i+1][j].getPoint().getY()+brickWidth);
+                    list[i+1][j].setY(list[i+1][j].getY()+brickWidth);
                 }
             }
         }
@@ -200,7 +209,7 @@ public class GamePanel extends JPanel {
     private boolean turnCheck() {
         Figure f = new Figure((currentFigure));
         f.turnRelative(90);
-        if(f.getPoint().getX()<width/2){
+        if(f.getX()<width/2){
             f.mooveRelative(1,0);
             if(leftCheck())return true;
         }else{
@@ -212,26 +221,26 @@ public class GamePanel extends JPanel {
 
     private boolean leftCheck() {
         for(Brick brick:currentFigure.getBricks()) {
-            int curX = brick.getPoint().getX() - brickWidth;
+            int curX = brick.getX() - brickWidth;
             if (curX < 0) return false;
 
             for (Brick[] row : list)
                 for (Brick b : row)
-                    if (b != null && b.getPoint().getX() == curX
-                        && b.getPoint().getY()==currentFigure.getPoint().getY()) return false;
+                    if (b != null && b.getX() == curX
+                        && b.getY()==currentFigure.getY()) return false;
         }
         return true;
     }
 
     private boolean rightCheck() {
         for(Brick brick:currentFigure.getBricks()){
-            int curX = brick.getPoint().getX()+brickWidth;
+            int curX = brick.getX()+brickWidth;
             if(curX>width-brickWidth) return false;
 
             for(Brick[] row:list)
                 for(Brick b:row)
-                    if(b!=null && b.getPoint().getX()==curX
-                        && b.getPoint().getY()==currentFigure.getPoint().getY()) return false;
+                    if(b!=null && b.getX()==curX
+                        && b.getY()==currentFigure.getY()) return false;
         }
         return true;
     }
@@ -273,5 +282,29 @@ public class GamePanel extends JPanel {
 
     public void slowMoition(){
         setPause(timeOut);
+    }
+
+
+
+    private class simpleKeyListener implements NativeKeyListener{
+        private simpleKeyListener(){
+            try {
+                GlobalScreen.registerNativeHook();
+            } catch (NativeHookException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+
+        public void nativeKeyPressed(NativeKeyEvent event){
+            parent.onKeyPressed(false);
+            if(event.getRawCode()==32) fastMotion();
+            else mooveFigure(event.getRawCode());
+        }
+
+        public void nativeKeyReleased(NativeKeyEvent event){
+            parent.onKeyPressed(true);
+            if(event.getRawCode()==32) slowMoition();
+        }
     }
 }

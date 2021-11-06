@@ -1,17 +1,14 @@
 package com.gmail.focusdigit;
 
-import com.github.kwhat.jnativehook.*;
-import com.github.kwhat.jnativehook.keyboard.*;
-
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.InvalidPropertiesFormatException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class App extends JFrame implements ActionListener, NativeKeyListener
+public class App extends JFrame
 {
     private static int level = 0;
     private static final int cellsWidth = 16;
@@ -29,12 +26,6 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
         int height;
         int width;
 
-        try {
-            GlobalScreen.registerNativeHook();
-        } catch (NativeHookException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         double screeHeight = screenSize.getHeight();
         double screenWidth = screenSize.getWidth();
@@ -48,6 +39,8 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
             width = brickWidth*cellsWidth+brickWidth;
         }
 
+        setFocusable(true);
+        setSize(width, height + 106);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -59,11 +52,18 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
 
         JPanel tmpPanel = new JPanel();
+
         buttons = new JButton[forButtons.length];
         for(int i=0;i<3;i++){
-            buttons[i] = new JButton(forButtons[i]);
-            buttons[i].setActionCommand(String.valueOf(i));
-            buttons[i].addActionListener(this);
+            final JButton tmpBtn = new JButton(forButtons[i]);
+            buttons[i] = tmpBtn;
+            buttons[i].setActionCommand(String.valueOf(37+i));
+            buttons[i].addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    panel.mooveFigure(Integer.valueOf(e.getActionCommand()));
+                }
+            });
             tmpPanel.add(buttons[i]);
         }
         controlPanel.add(tmpPanel);
@@ -71,7 +71,6 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
         tmpPanel = new JPanel();
         buttons[3]=new JButton(forButtons[3]);
         buttons[3].setActionCommand("3");
-        buttons[3].addActionListener(this);
         buttons[3].getModel().addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -85,16 +84,12 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
         tmpPanel.add(buttons[3]);
         controlPanel.add(tmpPanel);
 
-
         add(controlPanel, BorderLayout.SOUTH);
 
         panel = new GamePanel(this, cellsWidth, cellsHeight, brickWidth);
         panel.setBorder(new LineBorder(Color.GRAY,1,false));
         getContentPane().add(panel, BorderLayout.CENTER);
-
-        setSize(width, height + 106);
-
-        GlobalScreen.addNativeKeyListener(this);
+        this.requestFocus();
     }
 
     private JPanel makeTopPanel(){
@@ -111,42 +106,16 @@ public class App extends JFrame implements ActionListener, NativeKeyListener
         return topPanel;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        switch (e.getActionCommand()){
-            case "0":
-                panel.mooveFigure(37);
-                break;
-            case "1":
-                panel.mooveFigure(38);
-                break;
-            case "2":
-                panel.mooveFigure(39);
-                break;
-            default:
-                break;
-        }
-    }
-
-    public void nativeKeyPressed(NativeKeyEvent event){
-        for(JButton b:buttons) b.setEnabled(false);
-
-        if(event.getRawCode()==32) panel.fastMotion();
-        else panel.mooveFigure(event.getRawCode());
-    }
-
-    public void nativeKeyReleased(NativeKeyEvent event){
-        for(JButton b:buttons) b.setEnabled(true);
-
-        if(event.getRawCode()==32) panel.slowMoition();
-    }
-
     public void addFiguresCount(int i) {
         infoLabels[0].setText(" Figures:" + i + " ");
     }
 
     public void addLevel() {
         infoLabels[1].setText(" Level:" + ++level + " ");
+    }
+
+    public void onKeyPressed(boolean b) {
+        for(JButton btn:buttons) btn.setEnabled(b);
     }
 
     public static void main(String[] args) {

@@ -6,12 +6,10 @@ import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicTreeUI;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Random;
+import java.util.concurrent.*;
 
 public class GamePanel extends JPanel
 {
@@ -19,11 +17,14 @@ public class GamePanel extends JPanel
     private final int width;
     private final int height;
     private final int brickWidth;
-    private volatile boolean gameFlag,mooveFlag,stepFlag;
+    private volatile boolean gameFlag;
     private Figure currentFigure;
     private Brick[][] list;
     private int pause;
     private int timeOut;
+    ExecutorService exService;
+    private static ThreadPoolExecutor fixedThreadPoolWithQueueSize;
+
 
     public GamePanel(App parent, int width, int height, int brickWidth){
         this.parent = parent;
@@ -31,14 +32,13 @@ public class GamePanel extends JPanel
         this.height = height*brickWidth;
         this.brickWidth=brickWidth;
         this.setSize(this.width,this.height);
-        gameFlag=true;
-        mooveFlag=true;
-        stepFlag=false;
+        gameFlag=false;
         timeOut=500;
         pause=timeOut;
         list = new Brick[height][width];
 
-        GlobalScreen.addNativeKeyListener(new simpleKeyListener());
+        fixedThreadPoolWithQueueSize = (ThreadPoolExecutor)Executors.newCachedThreadPool();
+        fixedThreadPoolWithQueueSize.setCorePoolSize(1);
 
         startGame();
     }
@@ -49,18 +49,18 @@ public class GamePanel extends JPanel
             public void run() {
                 try {
                     int counter=0;
-                    while (gameFlag) {
+                    while (true) {
                         parent.addFiguresCount(++counter);
 
                         currentFigure = getRandomFigure();
                         if(currentFigure==null)continue;
 
-                        while (mooveCheck(currentFigure)){
-                            while (!mooveFlag) Thread.sleep(1);
-                            stepFlag=true;
+                        while (downCheck(currentFigure)){
+                            while (!gameFlag){
+                                Thread.sleep(1000);
+                            }
                             currentFigure.mooveRelative(0,1);
                             GamePanel.this.repaint();
-                            stepFlag=false;
 
                             Thread.sleep(pause);
                         }
@@ -76,30 +76,8 @@ public class GamePanel extends JPanel
         thread.start();
     }
 
-    private void endOfGame() {
-        JOptionPane.showMessageDialog(null,
-                "You loose!",
-                "Tetris demo",
-                JOptionPane.WARNING_MESSAGE);
-        System.exit(0);
-    }
-
-    private boolean mooveCheck(Figure figure){
-        for(Brick brick:figure.getBricks()){
-            if(brick.getY()/brickWidth+1 >= list.length) return false;
-
-            for(Brick[] row:list)
-                for(Brick b:row) {
-                    if (b!=null
-                            && brick.getX()==b.getX()
-                                && brick.getY() + brickWidth == b.getY())
-                                     return false;
-                }
-            }
-        return true;
-    }
-
     private void figureStop(Figure figure){
+        fixedThreadPoolWithQueueSize.getQueue().clear();
         for(Brick b:figure.getBricks()) {
             if (b.getY()<=0) endOfGame();
             list[b.getY() / brickWidth][b.getX() / brickWidth] = b;
@@ -152,58 +130,22 @@ public class GamePanel extends JPanel
     }
 
     public void mooveFigure(int code){
-        switch (code){
-            case 39:
-                while (stepFlag) {
-                    try {
-                        Thread.currentThread().sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+        fixedThreadPoolWithQueueSize.execute(new MooveTask(code));
+    }
+
+    private boolean downCheck(Figure figure){
+        for(Brick brick:figure.getBricks()){
+            if(brick.getY()/brickWidth+1 >= list.length) return false;
+
+            for(Brick[] row:list)
+                for(Brick b:row) {
+                    if (b!=null
+                            && brick.getX()==b.getX()
+                            && brick.getY() + brickWidth == b.getY())
+                        return false;
                 }
-                    mooveFlag=false;
-                    if(rightCheck())currentFigure.mooveRelative(1,0);
-                    mooveFlag=true;
-                break;
-            case 37:
-                while (stepFlag) {
-                    try {
-                        Thread.currentThread().sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                    mooveFlag=false;
-                    if(leftCheck())currentFigure.mooveRelative(-1,0);
-                    mooveFlag=true;
-                break;
-            case 38:
-                while (stepFlag) {
-                    try {
-                        Thread.currentThread().sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                mooveFlag=false;
-                if (turnCheck()) currentFigure.turnRelative(90);
-                mooveFlag=true;
-                break;
-            case 40:
-                while (stepFlag) {
-                    try {
-                        Thread.currentThread().sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                mooveFlag=false;
-                if (turnCheck()) currentFigure.turnRelative(270);
-                mooveFlag=true;
-                break;
-            default:
-                break;
         }
+        return true;
     }
 
     private boolean turnCheck() {
@@ -264,10 +206,6 @@ public class GamePanel extends JPanel
         return null;
     }
 
-    public int getTimeOut() {
-        return timeOut;
-    }
-
     public void setTimeOut(int timeOut) {
         this.timeOut = timeOut;
     }
@@ -284,9 +222,48 @@ public class GamePanel extends JPanel
         setPause(timeOut);
     }
 
+    public void setFlag() {
+        gameFlag=!gameFlag;
+    }
 
+    private void endOfGame() {
+        JOptionPane.showMessageDialog(null,
+                "You loose!",
+                "Tetris demo",
+                JOptionPane.WARNING_MESSAGE);
+        System.exit(0);
+    }
 
-    private class simpleKeyListener implements NativeKeyListener{
+    private class MooveTask implements Runnable{
+        private int code;
+        public MooveTask(int code) {
+            this.code=code;
+        }
+
+        @Override
+        public void run() {
+            switch (code){
+                case 32:
+                    fastMotion();
+                    break;
+                case 39:
+                    if(rightCheck())currentFigure.mooveRelative(1,0);
+                    break;
+                case 37:
+                    if(leftCheck())currentFigure.mooveRelative(-1,0);
+                    break;
+                case 38:
+                    if (turnCheck()) currentFigure.turnRelative(90);
+                    break;
+                case 40:
+                    if (turnCheck()) currentFigure.turnRelative(270);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    /*private class simpleKeyListener implements NativeKeyListener{
         private simpleKeyListener(){
             try {
                 GlobalScreen.registerNativeHook();
@@ -306,5 +283,5 @@ public class GamePanel extends JPanel
             parent.onKeyPressed(true);
             if(event.getRawCode()==32) slowMoition();
         }
-    }
+    }*/
 }

@@ -25,6 +25,7 @@ public class App extends JFrame
         int height;
         int width;
         flag=false;
+        int borderWidth = 2;
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         double screeHeight = screenSize.getHeight();
@@ -40,14 +41,15 @@ public class App extends JFrame
         }
 
         setFocusable(true);
-        setSize(width, height + 130);
+        setSize(width+brickWidth-borderWidth, height + 130);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(borderWidth,borderWidth));
 
         JPanel topPanel = makeTopPanel();
         getContentPane().add(topPanel,BorderLayout.NORTH);
-
+        getContentPane().add(new JPanel(), BorderLayout.WEST);
+        getContentPane().add(new JPanel(), BorderLayout.EAST);
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
 

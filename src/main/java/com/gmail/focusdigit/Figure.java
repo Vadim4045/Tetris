@@ -1,10 +1,6 @@
 package com.gmail.focusdigit;
 
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.util.InvalidPropertiesFormatException;
 
 public class Figure{

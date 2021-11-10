@@ -24,7 +24,7 @@ public class App extends JFrame implements ActionListener
 
     public App() throws IOException {
         super("Tetris Demo");
-        final String[] buttonsTooltips = {"key-LEFT", "key-UP/DOWN", "key-RIGHT", "key-SPACE"};
+
         final String[] forButtons = {"src/main/resources/images/arrow-png-left.png"
                 , "src/main/resources/images/arrow-png-turn.png"
                 , "src/main/resources/images/arrow-png-right.png"
@@ -68,7 +68,6 @@ public class App extends JFrame implements ActionListener
             BufferedImage buttonIcon = ImageIO.read(new File(forButtons[i]));
             buttons[i] = new JButton(new ImageIcon(buttonIcon.getScaledInstance(40,21,0)));
             buttons[i].setActionCommand(String.valueOf(37+i));
-            buttons[i].setToolTipText(buttonsTooltips[i]);
             buttons[i].setFocusable(false);
             buttons[i].addActionListener(this);
             tmpPanel.add(buttons[i]);
@@ -79,7 +78,6 @@ public class App extends JFrame implements ActionListener
         BufferedImage buttonIcon = ImageIO.read(new File(forButtons[3]));
         buttons[3] = new JButton(new ImageIcon(buttonIcon.getScaledInstance(120,21,0)));
         buttons[3].setActionCommand("3");
-        buttons[3].setToolTipText(buttonsTooltips[3]);
         buttons[3].setFocusable(false);
         buttons[3].getModel().addChangeListener(new ChangeListener() {
             @Override
@@ -112,6 +110,17 @@ public class App extends JFrame implements ActionListener
                 if(flag) panel.slowMoition();
             }
         });
+
+       /* KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher(){
+            @Override
+            public boolean dispatchKeyEvent(KeyEvent e) {
+                if(e.getKeyCode()==27) changePauseState();
+                else if(e.isControlDown())
+                    if(flag) panel.mooveFigure(e.getKeyCode());
+                    else panel.slowMoition();
+                return false;
+            }
+        });*/
 
         this.requestFocus();
     }

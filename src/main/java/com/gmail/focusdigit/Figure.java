@@ -3,9 +3,11 @@ package com.gmail.focusdigit;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.InvalidPropertiesFormatException;
 
-public class Figure {
+public class Figure{
 
     private volatile Brick[] bricks;
 
@@ -24,9 +26,9 @@ public class Figure {
         bricks[0] = new Brick(place,width);
 
         for(int i=0;i<param.length/2;i++)
-            bricks[i+1] = new Brick(bricks[0].getPoint().getX()+param[2*i]*width,
-                    bricks[0].getPoint().getY()+param[2*i+1]*width,
-                                         width);
+            bricks[i+1] = new Brick(bricks[0].getX()+param[2*i]*width,
+                    bricks[0].getY()+param[2*i+1]*width,
+                    width);
 
 
 
@@ -44,16 +46,16 @@ public class Figure {
             Point vector = getPoint().getRelativeVector(b.getPoint());
             switch (angle%360){
                 case 270:
-                    b.mooveAbsolute(getPoint().getX() + vector.getY(),
-                            getPoint().getY() - vector.getX());
+                    b.mooveAbsolute(getX() + vector.getY(),
+                            getY() - vector.getX());
                     break;
                 case 180:
-                    b.mooveAbsolute(getPoint().getX() - vector.getX(),
-                            getPoint().getY() - vector.getY());
+                    b.mooveAbsolute(getX() - vector.getX(),
+                            getY() - vector.getY());
                     break;
                 case 90:
-                    b.mooveAbsolute(getPoint().getX() - vector.getY(),
-                            getPoint().getY() + vector.getX());
+                    b.mooveAbsolute(getX() - vector.getY(),
+                            getY() + vector.getX());
                     break;
                 case 0:
                 default:
@@ -63,8 +65,16 @@ public class Figure {
 
     }
 
-    public Point getPoint(){
+    private Point getPoint() {
         return bricks[0].getPoint();
+    }
+
+    public int getX(){
+        return bricks[0].getX();
+    }
+
+    public int getY(){
+        return bricks[0].getY();
     }
 
     public Brick[] getBricks() {

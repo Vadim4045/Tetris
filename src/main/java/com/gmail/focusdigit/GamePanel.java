@@ -1,22 +1,30 @@
 package com.gmail.focusdigit;
 
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Random;
+import java.util.concurrent.*;
 
-public class GamePanel extends JPanel {
+public class GamePanel extends JPanel
+{
     App parent;
     private final int width;
     private final int height;
     private final int brickWidth;
-    private volatile boolean gameFlag,mooveFlag,stepFlag;
+    private volatile boolean gameFlag;
     private Figure currentFigure;
     private Brick[][] list;
     private int pause;
     private int timeOut;
+    ExecutorService exService;
+    private static ThreadPoolExecutor fixedThreadPoolWithQueueSize;
+
 
     public GamePanel(App parent, int width, int height, int brickWidth){
         this.parent = parent;
@@ -24,38 +32,38 @@ public class GamePanel extends JPanel {
         this.height = height*brickWidth;
         this.brickWidth=brickWidth;
         this.setSize(this.width,this.height);
-        gameFlag=true;
-        mooveFlag=true;
-        stepFlag=false;
+        gameFlag=false;
         timeOut=500;
         pause=timeOut;
         list = new Brick[height][width];
 
-        start();
+        fixedThreadPoolWithQueueSize = (ThreadPoolExecutor)Executors.newCachedThreadPool();
+        fixedThreadPoolWithQueueSize.setCorePoolSize(1);
+
+        startGame();
     }
 
-    private void start(){
+    private void startGame(){
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     int counter=0;
-                    while (gameFlag) {
+                    while (true) {
                         parent.addFiguresCount(++counter);
 
                         currentFigure = getRandomFigure();
                         if(currentFigure==null)continue;
 
-                        while (mooveCheck(currentFigure)){
-                            while (!mooveFlag) Thread.sleep(1);
-                            stepFlag=true;
-                            currentFigure.mooveRelative(0,1);
-                            GamePanel.this.repaint();
-                            stepFlag=false;
+                        while (downCheck()){
+                            while (!gameFlag){
+                                Thread.sleep(1000);
+                            }
+                            mooveFigure(-1);
 
                             Thread.sleep(pause);
                         }
-                            figureStop(currentFigure);
+                        figureStop(currentFigure);
                     }
 
                 } catch (InterruptedException e) {
@@ -67,33 +75,11 @@ public class GamePanel extends JPanel {
         thread.start();
     }
 
-    private void endOfGame() {
-        JOptionPane.showMessageDialog(null,
-                "You loose!",
-                "Tetris demo",
-                JOptionPane.WARNING_MESSAGE);
-        System.exit(0);
-    }
-
-    private boolean mooveCheck(Figure figure){
-        for(Brick brick:figure.getBricks()){
-            if(brick.getPoint().getY()/brickWidth+1 >= list.length) return false;
-
-            for(Brick[] row:list)
-                for(Brick b:row) {
-                    if (b!=null
-                            && brick.getPoint().getX()==b.getPoint().getX()
-                                && brick.getPoint().getY() + brickWidth == b.getPoint().getY())
-                                     return false;
-                }
-            }
-        return true;
-    }
-
     private void figureStop(Figure figure){
+        fixedThreadPoolWithQueueSize.getQueue().clear();
         for(Brick b:figure.getBricks()) {
-            if (b.getPoint().getY()<=0) endOfGame();
-            list[b.getPoint().getY() / brickWidth][b.getPoint().getX() / brickWidth] = b;
+            if (b.getY()<=0) endOfGame();
+            list[b.getY() / brickWidth][b.getX() / brickWidth] = b;
         }
         checkMap();
     }
@@ -120,12 +106,12 @@ public class GamePanel extends JPanel {
                 if(list[i][j]!=null){
                     list[i+1][j]=list[i][j];
                     list[i][j]=null;
-                    list[i+1][j].getPoint().setY(list[i+1][j].getPoint().getY()+brickWidth);
+                    list[i+1][j].setY(list[i+1][j].getY()+brickWidth);
                 }
             }
         }
         parent.addLevel();
-        setTimeOut(timeOut-20);
+        setTimeOut(timeOut-10);
         slowMoition();
         GamePanel.this.repaint();
     }
@@ -138,69 +124,33 @@ public class GamePanel extends JPanel {
             for(Brick b:row)
                 if(b!=null)b.draw(g);
 
-        currentFigure.draw(g);
+            currentFigure.draw(g);
         }
     }
 
     public void mooveFigure(int code){
-        switch (code){
-            case 39:
-                while (stepFlag) {
-                    try {
-                        Thread.currentThread().sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+        fixedThreadPoolWithQueueSize.execute(new MooveTask(code));
+    }
+
+    private boolean downCheck(){
+        for(Brick brick:currentFigure.getBricks()){
+            if(brick.getY()/brickWidth+1 >= list.length) return false;
+
+            for(Brick[] row:list)
+                for(Brick b:row) {
+                    if (b!=null
+                            && brick.getX()==b.getX()
+                            && brick.getY() + brickWidth == b.getY())
+                        return false;
                 }
-                    mooveFlag=false;
-                    if(rightCheck())currentFigure.mooveRelative(1,0);
-                    mooveFlag=true;
-                break;
-            case 37:
-                while (stepFlag) {
-                    try {
-                        Thread.currentThread().sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                    mooveFlag=false;
-                    if(leftCheck())currentFigure.mooveRelative(-1,0);
-                    mooveFlag=true;
-                break;
-            case 38:
-                while (stepFlag) {
-                    try {
-                        Thread.currentThread().sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                mooveFlag=false;
-                if (turnCheck()) currentFigure.turnRelative(90);
-                mooveFlag=true;
-                break;
-            case 40:
-                while (stepFlag) {
-                    try {
-                        Thread.currentThread().sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                mooveFlag=false;
-                if (turnCheck()) currentFigure.turnRelative(270);
-                mooveFlag=true;
-                break;
-            default:
-                break;
         }
+        return true;
     }
 
     private boolean turnCheck() {
         Figure f = new Figure((currentFigure));
         f.turnRelative(90);
-        if(f.getPoint().getX()<width/2){
+        if(f.getX()<width/2){
             f.mooveRelative(1,0);
             if(leftCheck())return true;
         }else{
@@ -212,26 +162,26 @@ public class GamePanel extends JPanel {
 
     private boolean leftCheck() {
         for(Brick brick:currentFigure.getBricks()) {
-            int curX = brick.getPoint().getX() - brickWidth;
+            int curX = brick.getX() - brickWidth;
             if (curX < 0) return false;
 
             for (Brick[] row : list)
                 for (Brick b : row)
-                    if (b != null && b.getPoint().getX() == curX
-                        && b.getPoint().getY()==currentFigure.getPoint().getY()) return false;
+                    if (b != null && b.getX() == curX
+                            && b.getY()==currentFigure.getY()) return false;
         }
         return true;
     }
 
     private boolean rightCheck() {
         for(Brick brick:currentFigure.getBricks()){
-            int curX = brick.getPoint().getX()+brickWidth;
+            int curX = brick.getX()+brickWidth;
             if(curX>width-brickWidth) return false;
 
             for(Brick[] row:list)
                 for(Brick b:row)
-                    if(b!=null && b.getPoint().getX()==curX
-                        && b.getPoint().getY()==currentFigure.getPoint().getY()) return false;
+                    if(b!=null && b.getX()==curX
+                            && b.getY()==currentFigure.getY()) return false;
         }
         return true;
     }
@@ -255,10 +205,6 @@ public class GamePanel extends JPanel {
         return null;
     }
 
-    public int getTimeOut() {
-        return timeOut;
-    }
-
     public void setTimeOut(int timeOut) {
         this.timeOut = timeOut;
     }
@@ -273,5 +219,52 @@ public class GamePanel extends JPanel {
 
     public void slowMoition(){
         setPause(timeOut);
+    }
+
+    public void setFlag() {
+        gameFlag=!gameFlag;
+    }
+
+    private void endOfGame() {
+        JOptionPane.showMessageDialog(null,
+                "You loose!",
+                "Tetris demo",
+                JOptionPane.WARNING_MESSAGE);
+        System.exit(0);
+    }
+
+    private class MooveTask implements Runnable{
+        private int code;
+
+        public MooveTask(int code) {
+            this.code=code;
+        }
+
+        @Override
+        public void run() {
+            switch (code){
+                case -1:
+                    if(downCheck()) currentFigure.mooveRelative(0,1);
+                    break;
+                case 32:
+                    fastMotion();
+                    break;
+                case 39:
+                    if(rightCheck())currentFigure.mooveRelative(1,0);
+                    break;
+                case 37:
+                    if(leftCheck())currentFigure.mooveRelative(-1,0);
+                    break;
+                case 38:
+                    if (turnCheck()) currentFigure.turnRelative(90);
+                    break;
+                case 40:
+                    if (turnCheck()) currentFigure.turnRelative(270);
+                    break;
+                default:
+                    break;
+            }
+            GamePanel.this.repaint();
+        }
     }
 }

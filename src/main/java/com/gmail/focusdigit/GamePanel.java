@@ -55,11 +55,12 @@ public class GamePanel extends JPanel
                         currentFigure = getRandomFigure();
                         if(currentFigure==null)continue;
 
-                        while (downCheck()){
+                        while (downCheck(currentFigure)){
                             while (!gameFlag){
                                 Thread.sleep(1000);
                             }
-                            mooveFigure(-1);
+                            currentFigure.mooveRelative(0,1);
+                            GamePanel.this.repaint();
 
                             Thread.sleep(pause);
                         }
@@ -111,7 +112,7 @@ public class GamePanel extends JPanel
             }
         }
         parent.addLevel();
-        setTimeOut(timeOut-10);
+        setTimeOut(timeOut-20);
         slowMoition();
         GamePanel.this.repaint();
     }
@@ -132,8 +133,8 @@ public class GamePanel extends JPanel
         fixedThreadPoolWithQueueSize.execute(new MooveTask(code));
     }
 
-    private boolean downCheck(){
-        for(Brick brick:currentFigure.getBricks()){
+    private boolean downCheck(Figure figure){
+        for(Brick brick:figure.getBricks()){
             if(brick.getY()/brickWidth+1 >= list.length) return false;
 
             for(Brick[] row:list)
@@ -235,7 +236,6 @@ public class GamePanel extends JPanel
 
     private class MooveTask implements Runnable{
         private int code;
-
         public MooveTask(int code) {
             this.code=code;
         }
@@ -243,9 +243,6 @@ public class GamePanel extends JPanel
         @Override
         public void run() {
             switch (code){
-                case -1:
-                    if(downCheck()) currentFigure.mooveRelative(0,1);
-                    break;
                 case 32:
                     fastMotion();
                     break;
@@ -264,7 +261,27 @@ public class GamePanel extends JPanel
                 default:
                     break;
             }
-            GamePanel.this.repaint();
         }
     }
+    /*private class simpleKeyListener implements NativeKeyListener{
+        private simpleKeyListener(){
+            try {
+                GlobalScreen.registerNativeHook();
+            } catch (NativeHookException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+
+        public void nativeKeyPressed(NativeKeyEvent event){
+            parent.onKeyPressed(false);
+            if(event.getRawCode()==32) fastMotion();
+            else mooveFigure(event.getRawCode());
+        }
+
+        public void nativeKeyReleased(NativeKeyEvent event){
+            parent.onKeyPressed(true);
+            if(event.getRawCode()==32) slowMoition();
+        }
+    }*/
 }

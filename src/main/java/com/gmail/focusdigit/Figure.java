@@ -5,7 +5,7 @@ import java.util.InvalidPropertiesFormatException;
 
 public class Figure{
 
-    private volatile Brick[] bricks;
+    private final Brick[] bricks;
 
     public Figure(Figure toClone){
         this.bricks = new Brick[toClone.getBricks().length];

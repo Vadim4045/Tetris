@@ -20,10 +20,9 @@ public class App extends JFrame implements ActionListener
     private static final int cellsWidth = 16;
     private static final int cellsHeight = 25;
     private boolean flag;
-    private int brickWidth;
     private GamePanel panel=null;
     private JLabel[] infoLabels;
-    private JButton[] buttons;
+    private final JButton[] buttons;
 
     public App() throws IOException {
         super("Tetris Demo");
@@ -41,18 +40,19 @@ public class App extends JFrame implements ActionListener
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         double screeHeight = screenSize.getHeight();
         double screenWidth = screenSize.getWidth();
+        int brickWidth;
         if(screenWidth>screeHeight){
             brickWidth = (int)Math.round(screeHeight*0.7/cellsHeight);
-            height = brickWidth*cellsHeight+brickWidth;
-            width = brickWidth*cellsWidth+brickWidth;
+            height = brickWidth *cellsHeight+ brickWidth;
+            width = brickWidth *cellsWidth+ brickWidth;
         }else{
             brickWidth = (int)Math.round(screenWidth*0.7/cellsWidth);
-            height = brickWidth*cellsHeight+brickWidth;
-            width = brickWidth*cellsWidth+brickWidth;
+            height = brickWidth *cellsHeight+ brickWidth;
+            width = brickWidth *cellsWidth+ brickWidth;
         }
 
         setFocusable(true);
-        setSize(width+brickWidth-borderWidth, height + 130);
+        setSize(width+ brickWidth -borderWidth, height + 130);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(borderWidth,borderWidth));
@@ -171,6 +171,6 @@ public class App extends JFrame implements ActionListener
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        panel.mooveFigure(Integer.valueOf(e.getActionCommand()));
+        panel.mooveFigure(Integer.parseInt(e.getActionCommand()));
     }
 }

@@ -12,11 +12,10 @@ public class GamePanel extends JPanel
 {
     App parent;
     private final int width;
-    private final int height;
     private final int brickWidth;
-    private volatile boolean gameFlag;
+    private boolean gameFlag;
     private Figure currentFigure;
-    private Brick[][] list;
+    private final Brick[][] list;
     private int pause;
     private int timeOut;
     private static ThreadPoolExecutor fixedThreadPoolWithQueueSize;
@@ -25,9 +24,9 @@ public class GamePanel extends JPanel
     public GamePanel(App parent, int width, int height, int brickWidth){
         this.parent = parent;
         this.width = width*brickWidth;
-        this.height = height*brickWidth;
+        int height1 = height * brickWidth;
         this.brickWidth=brickWidth;
-        this.setSize(this.width,this.height);
+        this.setSize(this.width, height1);
         gameFlag=false;
         timeOut=500;
         pause=timeOut;
@@ -148,12 +147,11 @@ public class GamePanel extends JPanel
         f.turnRelative(90);
         if(f.getX()<width/2){
             f.mooveRelative(1,0);
-            if(leftCheck())return true;
+            return leftCheck();
         }else{
             f.mooveRelative(-1,0);
-            if(rightCheck()) return true;
+            return rightCheck();
         }
-        return false;
     }
 
     private boolean leftCheck() {

@@ -1,10 +1,6 @@
 package com.gmail.focusdigit;
 
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.util.InvalidPropertiesFormatException;
 
 public class Figure{
@@ -18,7 +14,7 @@ public class Figure{
     }
 
     public Figure(Point place, int width, int angle, int... param) throws InvalidPropertiesFormatException {
-        if(param.length < 2 || param.length%2 != 0 || angle%90 != 0 || width < 0)
+        if(param.length < 2 || param.length%2 != 0 || angle%90 != 0 || width <= 0)
             throw new InvalidPropertiesFormatException("Bad coordinates");
 
         bricks = new Brick[param.length/2+1];

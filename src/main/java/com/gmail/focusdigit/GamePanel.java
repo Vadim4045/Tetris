@@ -4,7 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Random;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
 
 public class GamePanel extends JPanel
 {
@@ -31,7 +33,7 @@ public class GamePanel extends JPanel
         pause=timeOut;
         list = new Brick[height][width];
 
-        fixedThreadPoolWithQueueSize = (ThreadPoolExecutor)Executors.newCachedThreadPool();
+        fixedThreadPoolWithQueueSize = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         fixedThreadPoolWithQueueSize.setCorePoolSize(1);
 
         startGame();

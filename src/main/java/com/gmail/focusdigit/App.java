@@ -1,17 +1,13 @@
 package com.gmail.focusdigit;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
-public class App extends JFrame implements ActionListener
+public class App extends JFrame
 {
     private static int level = 0;
     private static final int cellsWidth = 16;
@@ -22,14 +18,10 @@ public class App extends JFrame implements ActionListener
     private JLabel[] infoLabels;
     private JButton[] buttons;
 
-    public App() throws IOException {
+    public App() {
         super("Tetris Demo");
 
-        final String[] forButtons = {"src/main/resources/images/arrow-png-left.png"
-                , "src/main/resources/images/arrow-png-turn.png"
-                , "src/main/resources/images/arrow-png-right.png"
-                , "src/main/resources/images/arrow-png-down.png"};
-
+        final String[] forButtons = {"left", "turn", "right", "doun"};
         int height;
         int width;
         flag=false;
@@ -65,20 +57,23 @@ public class App extends JFrame implements ActionListener
 
         buttons = new JButton[forButtons.length];
         for(int i=0;i<3;i++){
-            BufferedImage buttonIcon = ImageIO.read(new File(forButtons[i]));
-            buttons[i] = new JButton(new ImageIcon(buttonIcon.getScaledInstance(40,21,0)));
+            buttons[i] = new JButton(forButtons[i]);
+            buttons[i].setFont(new Font("Serif", Font.PLAIN,18));
             buttons[i].setActionCommand(String.valueOf(37+i));
-            buttons[i].setFocusable(false);
-            buttons[i].addActionListener(this);
+            buttons[i].addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    panel.mooveFigure(Integer.valueOf(e.getActionCommand()));
+                }
+            });
             tmpPanel.add(buttons[i]);
         }
         controlPanel.add(tmpPanel);
 
         tmpPanel = new JPanel();
-        BufferedImage buttonIcon = ImageIO.read(new File(forButtons[3]));
-        buttons[3] = new JButton(new ImageIcon(buttonIcon.getScaledInstance(120,21,0)));
+        buttons[3]=new JButton(forButtons[3]);
+        buttons[3].setFont(new Font("Serif", Font.PLAIN,18));
         buttons[3].setActionCommand("3");
-        buttons[3].setFocusable(false);
         buttons[3].getModel().addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -110,17 +105,6 @@ public class App extends JFrame implements ActionListener
                 if(flag) panel.slowMoition();
             }
         });
-
-       /* KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher(){
-            @Override
-            public boolean dispatchKeyEvent(KeyEvent e) {
-                if(e.getKeyCode()==27) changePauseState();
-                else if(e.isControlDown())
-                    if(flag) panel.mooveFigure(e.getKeyCode());
-                    else panel.slowMoition();
-                return false;
-            }
-        });*/
 
         this.requestFocus();
     }
@@ -169,18 +153,9 @@ public class App extends JFrame implements ActionListener
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                try {
-                    new App().setVisible(true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                new App().setVisible(true);
 
             }
         });
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        panel.mooveFigure(Integer.valueOf(e.getActionCommand()));
     }
 }

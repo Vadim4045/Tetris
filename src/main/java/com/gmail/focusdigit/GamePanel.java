@@ -1,10 +1,5 @@
 package com.gmail.focusdigit;
 
-import com.github.kwhat.jnativehook.GlobalScreen;
-import com.github.kwhat.jnativehook.NativeHookException;
-import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
-import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.InvalidPropertiesFormatException;
@@ -22,7 +17,6 @@ public class GamePanel extends JPanel
     private Brick[][] list;
     private int pause;
     private int timeOut;
-    ExecutorService exService;
     private static ThreadPoolExecutor fixedThreadPoolWithQueueSize;
 
 

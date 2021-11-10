@@ -152,10 +152,6 @@ public class App extends JFrame implements ActionListener
         }
     }
 
-    public void onKeyPressed(boolean b) {
-        for(JButton btn:buttons) btn.setEnabled(b);
-    }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override

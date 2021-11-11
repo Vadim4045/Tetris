@@ -1,6 +1,5 @@
 package com.gmail.focusdigit;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
@@ -11,8 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class App extends JFrame implements ActionListener
 {
@@ -24,13 +23,14 @@ public class App extends JFrame implements ActionListener
     private JLabel[] infoLabels;
     private final JButton[] buttons;
 
-    public App() throws IOException {
+    public App() throws IOException, URISyntaxException {
         super("Tetris Demo");
         final String[] toolTips = {"key-LEFT", "key-UP/DOWN", "key-RIGHT", "key-SPACE"};
-        final String[] forButtons = {"src/main/resources/images/arrow-png-left.png"
-                , "src/main/resources/images/arrow-png-turn.png"
-                , "src/main/resources/images/arrow-png-right.png"
-                , "src/main/resources/images/arrow-png-down.png"};
+        final String[] forButtons = {"arrow-png-left.png"
+                , "arrow-png-turn.png"
+                , "arrow-png-right.png"
+                , "arrow-png-down.png"};
+        final ResourcesLoader resGetter = new ResourcesLoader("src/main/resources", "");
 
         int height;
         int width;
@@ -68,8 +68,8 @@ public class App extends JFrame implements ActionListener
 
         buttons = new JButton[forButtons.length];
         for(int i=0;i<3;i++){
-            BufferedImage buttonIcon = ImageIO.read(new File(forButtons[i]));
-            buttons[i] = new JButton(new ImageIcon(buttonIcon.getScaledInstance(40,21,0)));
+            BufferedImage buttonIcon = resGetter.get("images/" + forButtons[i]);
+            buttons[i] = new JButton(new ImageIcon(buttonIcon.getScaledInstance(40,21,Image.SCALE_SMOOTH)));
             buttons[i].setActionCommand(String.valueOf(37+i));
             buttons[i].setToolTipText(toolTips[i]);
             buttons[i].setFocusable(false);
@@ -79,8 +79,8 @@ public class App extends JFrame implements ActionListener
         controlPanel.add(tmpPanel);
 
         tmpPanel = new JPanel();
-        BufferedImage buttonIcon = ImageIO.read(new File(forButtons[3]));
-        buttons[3] = new JButton(new ImageIcon(buttonIcon.getScaledInstance(120,21,0)));
+        BufferedImage buttonIcon = resGetter.get("images/" + forButtons[3]);
+        buttons[3] = new JButton(new ImageIcon(buttonIcon.getScaledInstance(120,21,Image.SCALE_SMOOTH)));
         buttons[3].setActionCommand("3");
         buttons[3].setToolTipText(toolTips[3]);
         buttons[3].setFocusable(false);
@@ -161,7 +161,7 @@ public class App extends JFrame implements ActionListener
             public void run() {
                 try {
                     new App().setVisible(true);
-                } catch (IOException e) {
+                } catch (IOException | URISyntaxException e) {
                     e.printStackTrace();
                 }
 
